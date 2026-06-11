@@ -1,0 +1,415 @@
+
+<style>
+  .hmi-wrap { font-family: 'Arial', sans-serif; padding: 1rem 0; }
+  .enunciado {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 15px;
+    color: var(--color-text-primary);
+  }
+  .enunciado strong { font-weight: 500; }
+  .hmi-screen {
+    background: #e8e0f0;
+    border-radius: 10px;
+    padding: 18px 16px 14px;
+    margin-bottom: 1rem;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .hmi-title {
+    background: #8888aa;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+    border-radius: 5px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .hmi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .hmi-btn {
+    background: #6666bb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-align: center;
+    transition: filter 0.1s, transform 0.1s;
+  }
+  .hmi-btn:hover { filter: brightness(1.15); transform: scale(1.02); }
+  .hmi-btn.green { background: #5cb85c; color: #fff; }
+  .hmi-btn.red { background: #cc2222; color: #fff; }
+  .hmi-btn.light-blue { background: #7ec8e3; color: #1a3a4a; font-weight: 700; }
+  .hmi-btn.purple-dark { background: #4a4aaa; color: #fff; }
+  .hmi-btn.wrong-click {
+    animation: shake 0.3s;
+    background: #e24b4a !important;
+  }
+  .hmi-btn.correct-click {
+    background: #5cb85c !important;
+    animation: pulse 0.3s;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.07); }
+  }
+  .hmi-bottom {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .hmi-nav-btn {
+    background: #ddd;
+    color: #333;
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: default;
+  }
+  .hmi-nav-btn.menu { background: #b6e0b0; color: #1a4a1a; }
+  .hmi-nav-btn.warn { background: #fff; border: 2px solid #e24b4a; }
+  .hmi-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .hmi-linea-label {
+    background: #7ec8e3;
+    color: #1a3a4a;
+    border-radius: 6px;
+    padding: 12px 10px;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 72px;
+    text-align: center;
+  }
+  .hmi-linea-btn {
+    flex: 1;
+    background: #4a4aaa;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: filter 0.1s, transform 0.1s;
+  }
+  .hmi-linea-btn:hover { filter: brightness(1.15); transform: scale(1.02); }
+  .feedback {
+    border-radius: var(--border-radius-md);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  .feedback.acierto { background: #eaf3de; color: #3b6d11; border: 1px solid #97c459; display: block; }
+  .feedback.fallo { background: #fcebeb; color: #a32d2d; border: 1px solid #f09595; display: block; }
+  .progress {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+    background: var(--color-background-secondary);
+    border: 1.5px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
+  }
+  .step-dot.active { background: #4a4aaa; color: #fff; border-color: #4a4aaa; }
+  .step-dot.done { background: #5cb85c; color: #fff; border-color: #5cb85c; }
+  .step-dot.error { background: #e24b4a; color: #fff; border-color: #e24b4a; }
+  .result-panel {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    text-align: center;
+    display: none;
+  }
+  .result-panel.show { display: block; }
+  .result-score { font-size: 36px; font-weight: 500; margin-bottom: 0.5rem; }
+  .result-label { font-size: 15px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .restart-btn {
+    background: #4a4aaa;
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .restart-btn:hover { filter: brightness(1.15); }
+  .hint { font-size: 12px; color: var(--color-text-tertiary); text-align: center; margin-top: -4px; margin-bottom: 0.5rem; }
+</style>
+
+<div class="hmi-wrap">
+  <h2 class="sr-only">Simulador interactivo: Forzar salida de cajas línea 1</h2>
+
+  <div class="enunciado">
+    <strong>Situación:</strong> Se necesita forzar la salida de cajas de la <strong>Línea 1</strong>. ¿Cuál es la secuencia correcta de pasos en el HMI?
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="step-dot active" id="dot-0">1</div>
+    <div class="step-dot" id="dot-1">2</div>
+    <div class="step-dot" id="dot-2">3</div>
+  </div>
+  <p class="hint" id="hint-text">Paso 1 de 3</p>
+
+  <div id="screen-container"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="result-panel" id="result-panel">
+    <div class="result-score" id="result-score"></div>
+    <div class="result-label" id="result-label"></div>
+    <button class="restart-btn" onclick="restart()">Reintentar</button>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    hint: "Paso 1 de 3 — Menú principal",
+    instruction: "Selecciona la opción correcta para forzar la salida de cajas.",
+    screen: "menu",
+    correctBtn: "forzar-salida-cajas",
+    feedbackOk: "✓ Correcto. Accedes a «Forzar salida cajas».",
+    feedbackFail: "✗ Esa no es la opción correcta. Busca «Forzar salida cajas»."
+  },
+  {
+    hint: "Paso 2 de 3 — Pantalla Forzado salida cajas",
+    instruction: "La máquina está en Modo Automático. ¿Qué debes pulsar primero?",
+    screen: "forzado-auto",
+    correctBtn: "modo-automatico",
+    feedbackOk: "✓ Correcto. El modo cambia a Manual.",
+    feedbackFail: "✗ Primero debes cambiar el modo antes de forzar una línea."
+  },
+  {
+    hint: "Paso 3 de 3 — Modo Manual activo",
+    instruction: "Ya estás en Modo Manual. Ahora fuerza la salida de la Línea 1.",
+    screen: "forzado-manual",
+    correctBtn: "forzar-linea-1",
+    feedbackOk: "✓ ¡Correcto! Se fuerza la salida de cajas en Línea 1.",
+    feedbackFail: "✗ Selecciona la línea correcta: Línea 1."
+  }
+];
+
+let currentStep = 0;
+let errors = [false, false, false];
+let locked = false;
+
+function renderScreen(step) {
+  const container = document.getElementById('screen-container');
+  const s = STEPS[step];
+  document.getElementById('hint-text').textContent = s.hint;
+
+  if (s.screen === 'menu') {
+    container.innerHTML = `
+      <div class="hmi-screen">
+        <div class="hmi-grid">
+          ${menuBtn('modos-lineas','MODOS LINEAS')}
+          ${menuBtn('finales-prod','FINALES PRODUCCION')}
+          ${menuBtn('estado-lineas','ESTADO LINEAS')}
+          ${menuBtn('rearme','REARME')}
+          ${menuBtn('prod-deseada','PRODUCCION DESEADA')}
+          ${menuBtn('avisos-sistema','AVISOS SISTEMA')}
+          ${menuBtn('info-prod','INFO. PRODUCCION')}
+          ${menuBtn('evacuar-linea','EVACUAR LINEA FINAL')}
+          ${menuBtn('movimientos-lineas','MOVIMIENTOS LINEAS')}
+          ${menuBtn('forzar-salida-cajas','FORZAR SALIDA CAJAS')}
+          ${menuBtn('anular-det-metal','ANULAR DET. METAL')}
+          ${menuBtn('configurar-panel','CONFIGURAR PANEL')}
+        </div>
+      </div>`;
+  } else if (s.screen === 'forzado-auto') {
+    container.innerHTML = `
+      <div class="hmi-screen">
+        <div class="hmi-title">FORZADO SALIDA CAJAS</div>
+        <button class="hmi-btn green" id="modo-automatico" onclick="handleClick('modo-automatico')" style="width:60%; font-size:14px; padding: 12px;">MODO AUTOMATICO</button>
+        <div style="width:100%; display:flex; flex-direction:column; gap:10px;">
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 1</div>
+            <button class="hmi-linea-btn" id="forzar-linea-1-a" onclick="handleClick('forzar-linea-1-a')">FORZAR LÍNEA 1</button>
+          </div>
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 2</div>
+            <button class="hmi-linea-btn" id="forzar-linea-2-a" onclick="handleClick('forzar-linea-2-a')">FORZAR LÍNEA 2</button>
+          </div>
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 3</div>
+            <button class="hmi-linea-btn" id="forzar-linea-3-a" onclick="handleClick('forzar-linea-3-a')">FORZAR LÍNEA 3</button>
+          </div>
+        </div>
+        <div class="hmi-bottom">
+          <div class="hmi-nav-btn">ATRAS</div>
+          <div class="hmi-nav-btn">INICIO</div>
+          <div class="hmi-nav-btn menu">MENU</div>
+          <div class="hmi-nav-btn warn">⚠️</div>
+        </div>
+      </div>`;
+  } else if (s.screen === 'forzado-manual') {
+    container.innerHTML = `
+      <div class="hmi-screen">
+        <div class="hmi-title">FORZADO SALIDA CAJAS</div>
+        <button class="hmi-btn red" id="modo-manual-btn" onclick="handleClick('modo-manual-btn')" style="width:60%; font-size:14px; padding: 12px;">MODO MANUAL</button>
+        <div style="width:100%; display:flex; flex-direction:column; gap:10px;">
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 1</div>
+            <button class="hmi-linea-btn" id="forzar-linea-1" onclick="handleClick('forzar-linea-1')">FORZAR LÍNEA 1</button>
+          </div>
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 2</div>
+            <button class="hmi-linea-btn" id="forzar-linea-2" onclick="handleClick('forzar-linea-2')">FORZAR LÍNEA 2</button>
+          </div>
+          <div class="hmi-row">
+            <div class="hmi-linea-label">Linea 3</div>
+            <button class="hmi-linea-btn" id="forzar-linea-3" onclick="handleClick('forzar-linea-3')">FORZAR LÍNEA 3</button>
+          </div>
+        </div>
+        <div class="hmi-bottom">
+          <div class="hmi-nav-btn">ATRAS</div>
+          <div class="hmi-nav-btn">INICIO</div>
+          <div class="hmi-nav-btn menu">MENU</div>
+          <div class="hmi-nav-btn warn">⚠️</div>
+        </div>
+      </div>`;
+  }
+}
+
+function menuBtn(id, label) {
+  return `<button class="hmi-btn" id="${id}" onclick="handleClick('${id}')">${label}</button>`;
+}
+
+function handleClick(id) {
+  if (locked) return;
+  const step = STEPS[currentStep];
+  const fb = document.getElementById('feedback');
+
+  if (id === step.correctBtn) {
+    locked = true;
+    const btn = document.getElementById(id);
+    if (btn) { btn.classList.add('correct-click'); }
+    fb.className = 'feedback acierto';
+    fb.textContent = step.feedbackOk;
+    document.getElementById('dot-' + currentStep).className = 'step-dot done';
+    setTimeout(() => {
+      currentStep++;
+      locked = false;
+      fb.className = 'feedback';
+      fb.textContent = '';
+      if (currentStep < STEPS.length) {
+        renderScreen(currentStep);
+        updateDots();
+      } else {
+        showResult();
+      }
+    }, 1200);
+  } else {
+    errors[currentStep] = true;
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.classList.add('wrong-click');
+      setTimeout(() => btn.classList.remove('wrong-click'), 400);
+    }
+    fb.className = 'feedback fallo';
+    fb.textContent = step.feedbackFail;
+    document.getElementById('dot-' + currentStep).className = 'step-dot error';
+    setTimeout(() => {
+      document.getElementById('dot-' + currentStep).className = 'step-dot active';
+      fb.className = 'feedback';
+      fb.textContent = '';
+    }, 1800);
+  }
+}
+
+function updateDots() {
+  STEPS.forEach((_, i) => {
+    const dot = document.getElementById('dot-' + i);
+    if (i < currentStep) {
+      if (!dot.classList.contains('done')) dot.className = 'step-dot done';
+    } else if (i === currentStep) {
+      dot.className = 'step-dot active';
+    } else {
+      dot.className = 'step-dot';
+    }
+  });
+  document.getElementById('hint-text').textContent = STEPS[currentStep].hint;
+}
+
+function showResult() {
+  document.getElementById('screen-container').style.display = 'none';
+  document.getElementById('hint-text').style.display = 'none';
+  document.getElementById('progress').style.display = 'none';
+  const errCount = errors.filter(Boolean).length;
+  const panel = document.getElementById('result-panel');
+  const score = document.getElementById('result-score');
+  const label = document.getElementById('result-label');
+  if (errCount === 0) {
+    score.textContent = '✓ ¡Perfecto!';
+    score.style.color = '#3b6d11';
+    label.textContent = 'Seguiste los 3 pasos sin ningún error. ¡Procedimiento dominado!';
+  } else if (errCount === 1) {
+    score.textContent = 'Casi perfecto';
+    score.style.color = '#ba7517';
+    label.textContent = `Completaste el procedimiento con ${errCount} error. Repasa el paso fallido.`;
+  } else {
+    score.textContent = 'Necesitas repasar';
+    score.style.color = '#a32d2d';
+    label.textContent = `Cometiste ${errCount} errores. Vuelve a intentarlo para afianzar el procedimiento.`;
+  }
+  panel.classList.add('show');
+}
+
+function restart() {
+  currentStep = 0;
+  errors = [false, false, false];
+  locked = false;
+  document.getElementById('screen-container').style.display = '';
+  document.getElementById('hint-text').style.display = '';
+  document.getElementById('progress').style.display = 'flex';
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  STEPS.forEach((_, i) => {
+    document.getElementById('dot-' + i).className = i === 0 ? 'step-dot active' : 'step-dot';
+  });
+  renderScreen(0);
+  document.getElementById('hint-text').textContent = STEPS[0].hint;
+}
+
+renderScreen(0);
+</script>
