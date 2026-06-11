@@ -1,0 +1,269 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.root { font-family: Arial, sans-serif; padding: 1rem 0; max-width: 500px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 1rem; }
+.header h2 { font-size: 15px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+.header p { font-size: 13px; color: var(--color-text-secondary); }
+
+.progress-wrap { display: flex; gap: 8px; margin-bottom: 1rem; }
+.pstep { flex: 1; height: 5px; border-radius: 3px; background: #ccc; transition: background 0.4s; }
+.pstep.done { background: #3a8a3a; }
+.pstep.active { background: #1a6abf; }
+
+/* PANTALLA HMI */
+.hmi-screen {
+  border-radius: 6px;
+  border: 3px solid #555;
+  overflow: hidden;
+}
+.brand-bar {
+  background: #888;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  border-bottom: 2px solid #555;
+}
+.brand-bar .siemens { color: #1a1a6e; letter-spacing: 1px; }
+.brand-bar .simatic { color: #222; font-weight: 600; }
+
+.screen-body { padding: 12px; }
+
+/* Paso 1 - fondo blanco */
+.s1 { background: #f2f2f2; }
+.s1 .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.footer-txt { font-size: 9px; color: #666; text-align: center; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 4px; }
+
+/* Paso 2 - fondo lila */
+.s2 { background: #8888cc; }
+.s2 .footer-txt { color: #ddd; border-top-color: #6666aa; }
+.s2 .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 7px; }
+.s2 .btn-menu { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+
+/* Paso 3 - fondo gris azulado */
+.s3 { background: #9090b0; }
+.s3 .screen-title { font-size: 11px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 8px; letter-spacing: 0.5px; }
+.s3 .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 7px; }
+.s3 .btn-nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.s3 .footer-txt { color: #ddd; border-top-color: #7070a0; }
+
+/* BOTONES */
+.hbtn {
+  background: #e0e0e0;
+  border: 1.5px solid #aaa;
+  border-radius: 3px;
+  padding: 8px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #111;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.25;
+  min-height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Arial, sans-serif;
+  transition: filter 0.1s;
+  -webkit-user-select: none; user-select: none;
+}
+.hbtn:hover { filter: brightness(0.92); }
+.hbtn:active { filter: brightness(0.85); }
+.hbtn.lila { background: #c0c0e4; border-color: #8888bb; }
+.hbtn.green { background: #2d7a2d; color: #fff; border-color: #1e5a1e; }
+.hbtn.nav { background: #c0c0c0; color: #333; }
+.hbtn.nav.lila { background: #b0b0d8; }
+
+.hbtn.shake { animation: sh 0.3s; }
+@keyframes sh { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+.hbtn.flash { animation: fl 0.4s; }
+@keyframes fl { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.4) saturate(1.5)} }
+
+.fkeys { display: flex; gap: 4px; background: #888; padding: 5px 8px; border-top: 2px solid #555; }
+.fkey { flex: 1; height: 14px; background: #aaa; border-radius: 2px; border: 1px solid #888; }
+
+/* STATUS */
+.status { border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 500; text-align: center; margin-top: 1rem; }
+.status.info { background: #e6f0fb; color: #174a8c; border: 1px solid #b5d0f0; }
+.status.ok { background: #e6f9ee; color: #1a6e3a; border: 1px solid #a8e6c0; }
+.status.err { background: #fce8ee; color: #922; border: 1px solid #f5b5c5; }
+.err-count { font-size: 12px; color: var(--color-text-secondary); text-align: center; margin-top: 5px; }
+
+/* FINISH */
+.finish { text-align: center; padding: 2rem 1rem; }
+.finish h3 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin: 12px 0 8px; }
+.finish p { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+.restart { background: #1a6abf; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif; }
+.restart:hover { background: #145599; }
+</style>
+
+<div class="root">
+  <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Simulación HMI: bajar el empujador de capa</h2>
+
+  <div class="header">
+    <h2>El empujador de capa está subido en reposo</h2>
+    <p>Pulsa los botones correctos para bajarlo</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="pstep active" id="ps1"></div>
+    <div class="pstep" id="ps2"></div>
+    <div class="pstep" id="ps3"></div>
+  </div>
+
+  <div id="screen-wrap">
+    <div class="hmi-screen">
+      <div class="brand-bar">
+        <span class="siemens">SIEMENS</span>
+        <span class="simatic">SIMATIC HMI</span>
+      </div>
+      <div class="screen-body" id="screen-body"></div>
+      <div class="fkeys">
+        <div class="fkey"></div><div class="fkey"></div><div class="fkey"></div><div class="fkey"></div>
+        <div class="fkey"></div><div class="fkey"></div><div class="fkey"></div><div class="fkey"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status info" id="status">Paso 1 de 3 — Accede al menú de manuales</div>
+  <div class="err-count" id="err-count"></div>
+</div>
+
+<script>
+let step = 0, stepErr = 0, totalErr = 0;
+
+const steps = [
+  {
+    cls: 's1',
+    html: () => `
+      <div class="s1">
+        <div class="btn-grid">
+          <button class="hbtn" data-ok="0" onclick="hit(this)">CONTROL</button>
+          <button class="hbtn" data-ok="0" onclick="hit(this)">DEFECTOS</button>
+          <button class="hbtn" data-ok="1" onclick="hit(this)">MANUALES</button>
+          <button class="hbtn" data-ok="0" onclick="hit(this)">AJUSTES</button>
+        </div>
+        <div class="footer-txt">ULTRACONGELADOS VIRTO PALETIZADOR 1</div>
+      </div>`,
+    info: 'Paso 1 de 3 — Accede al menú de manuales'
+  },
+  {
+    cls: 's2',
+    html: () => `
+      <div class="s2">
+        <div class="btn-grid">
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">MANUALES<br>VÍA 1</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">MANUALES<br>VÍA 2</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">BRAZO<br>CARTÓN</button>
+          <button class="hbtn lila" data-ok="1" onclick="hit(this)">EMPUJADOR</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">ALMACEN</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">PISTAS</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">ELEVADOR</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">BRAZO<br>CARTÓN</button>
+          <button class="hbtn lila" data-ok="0" onclick="hit(this)">MTO<br>SEÑALES</button>
+        </div>
+        <div class="btn-menu">
+          <button class="hbtn nav lila" data-ok="0" onclick="hit(this)" style="grid-column:2">MENU</button>
+        </div>
+        <div class="footer-txt">ULTRACONGELADOS VIRTO PALETIZADOR 1</div>
+      </div>`,
+    info: 'Paso 2 de 3 — Selecciona la sección correcta'
+  },
+  {
+    cls: 's3',
+    html: () => `
+      <div class="s3">
+        <div class="screen-title">MANUALES EMPUJADORES</div>
+        <div class="btn-grid">
+          <button class="hbtn" data-ok="0" onclick="hit(this)">AVANCE EMPUJADOR<br>FILA</button>
+          <button class="hbtn" data-ok="0" onclick="hit(this)">AVANCE EMPUJADOR<br>CAPA</button>
+          <button class="hbtn" data-ok="0" onclick="hit(this)">RETRO EMPUJADOR<br>FILA</button>
+          <button class="hbtn" data-ok="0" onclick="hit(this)">RETRO EMPUJADOR<br>CAPA</button>
+          <button class="hbtn green" data-ok="0" onclick="hit(this)">VÁLVULA SUBIR<br>EMPUJADOR FILA</button>
+          <button class="hbtn green" data-ok="1" onclick="hit(this)">VÁLVULA SUBIR<br>EMPUJADOR CAPA</button>
+        </div>
+        <div class="btn-nav">
+          <button class="hbtn nav" data-ok="0" onclick="hit(this)">ANTERIOR</button>
+          <button class="hbtn nav" data-ok="0" onclick="hit(this)">MENU</button>
+          <button class="hbtn nav" data-ok="0" onclick="hit(this)">SIGUIENTE</button>
+        </div>
+        <div class="footer-txt">ULTRACONGELADOS VIRTO PALETIZADOR 1</div>
+      </div>`,
+    info: 'Paso 3 de 3 — Ejecuta la acción sobre el empujador de capa'
+  }
+];
+
+function updateProgress() {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('ps'+i);
+    const idx = i-1;
+    el.className = 'pstep' + (idx < step ? ' done' : idx === step ? ' active' : '');
+  });
+}
+
+function render() {
+  document.getElementById('screen-body').innerHTML = steps[step].html();
+  setStatus(steps[step].info, 'info');
+  document.getElementById('err-count').textContent = '';
+  stepErr = 0;
+  updateProgress();
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + cls;
+}
+
+function hit(el) {
+  if (el.getAttribute('data-ok') === '1') {
+    el.classList.add('flash');
+    setStatus('✓ Correcto', 'ok');
+    step++;
+    if (step < 3) {
+      setTimeout(render, 600);
+    } else {
+      setTimeout(finish, 600);
+    }
+  } else {
+    el.classList.add('shake');
+    setTimeout(() => el.classList.remove('shake'), 300);
+    stepErr++; totalErr++;
+    setStatus('✗ Ese no es el botón correcto — inténtalo de nuevo', 'err');
+    document.getElementById('err-count').textContent = stepErr === 1 ? '1 error en este paso' : stepErr + ' errores en este paso';
+  }
+}
+
+function finish() {
+  document.getElementById('screen-wrap').innerHTML = `
+    <div class="finish">
+      <div style="font-size:44px">✅</div>
+      <h3>¡Procedimiento completado!</h3>
+      <p>El empujador de capa ha sido bajado correctamente.<br>
+      ${totalErr === 0 ? 'Sin ningún error — ¡perfecto!' : 'Total de errores: ' + totalErr}</p>
+      <button class="restart" onclick="restart()">Volver a intentarlo</button>
+    </div>`;
+  [1,2,3].forEach(i => document.getElementById('ps'+i).className = 'pstep done');
+  setStatus('Procedimiento completado con éxito', 'ok');
+  document.getElementById('err-count').textContent = '';
+}
+
+function restart() {
+  step = 0; stepErr = 0; totalErr = 0;
+  document.getElementById('screen-wrap').innerHTML = `
+    <div class="hmi-screen">
+      <div class="brand-bar">
+        <span class="siemens">SIEMENS</span>
+        <span class="simatic">SIMATIC HMI</span>
+      </div>
+      <div class="screen-body" id="screen-body"></div>
+      <div class="fkeys">
+        <div class="fkey"></div><div class="fkey"></div><div class="fkey"></div><div class="fkey"></div>
+        <div class="fkey"></div><div class="fkey"></div><div class="fkey"></div><div class="fkey"></div>
+      </div>
+    </div>`;
+  render();
+}
+
+render();
+</script>
