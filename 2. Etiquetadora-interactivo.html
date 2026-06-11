@@ -1,0 +1,563 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans, sans-serif); }
+
+  .game-wrap {
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-secondary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-background-primary);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .step-dot.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .step-dot.done { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .step-line {
+    flex: 1; height: 2px;
+    background: var(--color-border-tertiary);
+    transition: background 0.3s;
+  }
+  .step-line.done { background: #16a34a; }
+
+  .instruction-box {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 0.75rem 1.25rem;
+    width: 100%; max-width: 560px;
+    font-size: 14px; color: var(--color-text-primary);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .instruction-box span { font-weight: 500; color: #2563eb; }
+
+  .screen-container {
+    width: 100%; max-width: 560px;
+    position: relative;
+  }
+
+  .device-frame {
+    background: #0a0f1e;
+    border-radius: 16px;
+    border: 3px solid #1e2a4a;
+    padding: 12px;
+    position: relative;
+  }
+
+  .screen {
+    background: #0d1535;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cab-logo {
+    font-size: 42px; font-weight: 900; letter-spacing: -2px;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: 'Arial Black', sans-serif;
+  }
+
+  .listo-label { font-size: 14px; color: #cbd5e1; }
+
+  .btn-row { display: flex; gap: 8px; width: 100%; justify-content: center; }
+
+  .printer-btn {
+    flex: 1; max-width: 110px;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: none;
+    cursor: default;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .printer-btn.clickable { cursor: pointer; animation: pulse-ring 2s infinite; }
+  .printer-btn.clickable:hover { transform: scale(1.07); }
+  .printer-btn.clickable:active { transform: scale(0.96); }
+
+  @keyframes pulse-ring {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.25); }
+    50% { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+  }
+
+  .btn-settings { background: #2563eb; }
+  .btn-stop { background: #db2777; }
+  .btn-pause { background: #3b82f6; }
+  .btn-download { background: #16a34a; }
+  .btn-recycle {
+    border-radius: 10px; position: absolute;
+    top: 12px; right: 12px;
+    width: 56px; height: 56px; font-size: 22px;
+    background: #d97706; border: none; cursor: default;
+  }
+
+  .wrong-shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .wrong-flash { animation: wrongflash 0.4s; }
+  @keyframes wrongflash {
+    0%,100% { background: #0d1535; }
+    50% { background: #3f0000; }
+  }
+
+  .feedback-badge {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #16a34a;
+    color: #fff;
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-size: 15px; font-weight: 500;
+    z-index: 10;
+    transition: transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .feedback-badge.wrong { background: #dc2626; }
+  .feedback-badge.show { transform: translate(-50%, -50%) scale(1); }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 0 4px;
+    width: 100%;
+  }
+  .menu-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    border-radius: 10px;
+    padding: 10px 4px 8px;
+    border: none;
+    cursor: default;
+    transition: transform 0.15s;
+  }
+  .menu-item.clickable { cursor: pointer; animation: pulse-ring 2s infinite; }
+  .menu-item.clickable:hover { transform: scale(1.08); }
+  .menu-item span { font-size: 11px; color: #e2e8f0; text-align: center; }
+  .menu-icon { font-size: 28px; }
+
+  .mi-info { background: #ea580c; }
+  .mi-almac { background: #0891b2; }
+  .mi-config { background: #2563eb; }
+  .mi-prueba { background: #7c3aed; }
+  .mi-seg { background: #db2777; }
+  .mi-diag { background: #16a34a; }
+  .mi-extras { background: #65a30d; }
+  .mi-ayuda { background: #db2777; }
+
+  .sidebar {
+    width: 80px; min-height: 260px;
+    background: #0a1225;
+    border-right: 1px solid #1e3a5f;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-radius: 10px 0 0 10px;
+    flex-shrink: 0;
+  }
+  .sidebar-label { color: #94a3b8; font-size: 13px; font-weight: 500; }
+
+  .list-area {
+    flex: 1;
+    display: flex; flex-direction: column;
+    padding: 8px 8px 8px 0;
+    gap: 4px;
+  }
+
+  .list-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: default;
+    transition: transform 0.15s;
+    background: #3730a3;
+  }
+  .list-item.clickable { cursor: pointer; animation: pulse-ring 2s infinite; }
+  .list-item.clickable:hover { transform: scale(1.02); }
+  .list-item-icon { font-size: 22px; }
+  .list-item-label { font-size: 13px; color: #e2e8f0; }
+
+  .li-cargar { background: #4338ca; }
+  .li-impr { background: #3730a3; }
+  .li-copiar { background: #312e81; }
+  .li-format { background: #2d2a78; }
+  .li-almacpred { background: #27246f; }
+
+  .load-screen { width: 100%; display: flex; flex-direction: column; }
+
+  .load-top {
+    background: #e8e4f4;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .load-top-label { font-size: 13px; color: #3730a3; font-weight: 500; }
+  .load-top-arrow { font-size: 14px; color: #3730a3; }
+
+  .file-item {
+    background: #f0eefb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px; color: #1e1b4b; font-weight: 500;
+    cursor: default;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .file-item.clickable { cursor: pointer; border-color: #4f46e5; animation: pulse-ring 2s infinite; }
+  .file-item.clickable:hover { background: #e0dbff; }
+  .file-item.selected { background: #c7d2fe; border-color: #4f46e5; }
+
+  .load-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+  .action-btn {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    border: none;
+    cursor: default;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    transition: transform 0.15s;
+  }
+  .action-btn.clickable { cursor: pointer; animation: pulse-ring 2s infinite; }
+  .action-btn.clickable:hover { transform: scale(1.1); }
+  .action-btn.clickable:active { transform: scale(0.93); }
+  .btn-cancel { background: #db2777; }
+  .btn-confirm { background: #16a34a; }
+
+  .success-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; min-height: 280px; text-align: center;
+  }
+  .success-icon { font-size: 56px; }
+  .success-title { font-size: 20px; font-weight: 500; color: #fff; }
+  .success-sub { font-size: 13px; color: #94a3b8; }
+  .restart-btn {
+    margin-top: 8px;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background 0.15s;
+  }
+  .restart-btn:hover { background: #1d4ed8; }
+
+  .step-label {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    width: 100%; max-width: 560px;
+  }
+</style>
+
+<div class="game-wrap" id="app">
+  <h2 class="sr-only">Tutorial interactivo: Cargar etiqueta en impresora cab</h2>
+  <div class="progress-bar" id="progress"></div>
+  <div class="instruction-box" id="instruction"></div>
+  <div class="screen-container" id="screen-wrap">
+    <div class="device-frame">
+      <div class="screen" id="screen"></div>
+      <div class="feedback-badge" id="badge"></div>
+    </div>
+  </div>
+  <div class="step-label" id="step-label"></div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    instruction: 'Paso 1 de 4 — Pulsa el botón de <span>Configuración ⚙️</span> (engranaje azul, abajo izquierda)',
+    render: renderStep1,
+  },
+  {
+    instruction: 'Paso 2 de 4 — Estás en el Menú. Pulsa el icono de <span>Almac.</span> (almacenamiento)',
+    render: renderStep2,
+  },
+  {
+    instruction: 'Paso 3 de 4 — Menú Almac. Pulsa <span>Cargar etiqueta</span> (primera opción)',
+    render: renderStep3,
+  },
+  {
+    instruction: 'Paso 4 de 4 (1/2) — Selecciona el archivo <span>97X50_ET.lbl</span>',
+    render: renderStep4a,
+  },
+  {
+    instruction: 'Paso 4 de 4 (2/2) — Archivo seleccionado. Ahora pulsa el botón <span>✓ verde</span> para confirmar',
+    render: renderStep4b,
+  },
+];
+
+let current = 0;
+let errors = 0;
+
+function getProgressStep() {
+  if (current <= 2) return current;
+  return 3;
+}
+
+function renderProgress() {
+  const prog = document.getElementById('progress');
+  const total = 4;
+  const idx = getProgressStep();
+  let html = '';
+  for (let i = 0; i < total; i++) {
+    let cls = i < idx ? 'done' : (i === idx ? 'active' : '');
+    html += `<div class="step-dot ${cls}">${i < idx ? '✓' : i+1}</div>`;
+    if (i < total - 1) html += `<div class="step-line ${i < idx ? 'done' : ''}"></div>`;
+  }
+  prog.innerHTML = html;
+}
+
+function renderInstruction() {
+  document.getElementById('instruction').innerHTML = STEPS[current].instruction;
+}
+
+function showBadge(msg, isWrong) {
+  const b = document.getElementById('badge');
+  b.textContent = msg;
+  b.className = 'feedback-badge' + (isWrong ? ' wrong' : '') + ' show';
+  setTimeout(() => { b.className = 'feedback-badge' + (isWrong ? ' wrong' : ''); }, 900);
+}
+
+function wrongClick(el) {
+  errors++;
+  showBadge('¡No es ese!', true);
+  const screen = document.getElementById('screen');
+  screen.classList.add('wrong-flash');
+  if (el) el.classList.add('wrong-shake');
+  setTimeout(() => {
+    screen.classList.remove('wrong-flash');
+    if (el) el.classList.remove('wrong-shake');
+  }, 450);
+}
+
+function advance() {
+  showBadge('¡Correcto! ✓', false);
+  setTimeout(() => {
+    current++;
+    if (current >= STEPS.length) renderSuccess();
+    else render();
+  }, 700);
+}
+
+function render() {
+  renderProgress();
+  renderInstruction();
+  STEPS[current].render();
+  document.getElementById('step-label').textContent = `Errores cometidos: ${errors}`;
+}
+
+function renderStep1() {
+  document.getElementById('screen').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px 4px;border-bottom:2px solid #5b21b6;">
+      <span style="color:#fff;font-size:16px;">🔋</span>
+      <span style="color:#fff;font-size:15px;font-weight:600;">12:15</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 12px 8px;gap:10px;position:relative;">
+      <button class="btn-recycle" onclick="wrongClick(this)">♻️</button>
+      <div class="cab-logo">cab</div>
+      <div class="listo-label">Listo</div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="printer-btn btn-settings clickable" onclick="advance()">⚙️</button>
+        <button class="printer-btn btn-stop" onclick="wrongClick(this)">🛑</button>
+        <button class="printer-btn btn-pause" onclick="wrongClick(this)">⏸️</button>
+        <button class="printer-btn btn-download" onclick="wrongClick(this)">⬇️</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderStep2() {
+  document.getElementById('screen').innerHTML = `
+    <div style="display:flex;flex:1;min-height:280px;">
+      <div class="sidebar">
+        <div style="font-size:20px;color:#94a3b8;">◀</div>
+        <div class="sidebar-label">Menú</div>
+        <div style="font-size:22px;">🏠</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 8px;">
+        <div class="menu-grid">
+          <button class="menu-item mi-info" onclick="wrongClick(this)">
+            <div class="menu-icon">ℹ️</div><span>Información</span>
+          </button>
+          <button class="menu-item mi-almac clickable" onclick="advance()">
+            <div class="menu-icon">📦</div><span>Almac.</span>
+          </button>
+          <button class="menu-item mi-config" onclick="wrongClick(this)">
+            <div class="menu-icon">⚙️</div><span>Config.</span>
+          </button>
+          <button class="menu-item mi-prueba" onclick="wrongClick(this)">
+            <div class="menu-icon">✉️</div><span>Prueba</span>
+          </button>
+          <button class="menu-item mi-seg" onclick="wrongClick(this)">
+            <div class="menu-icon">🛡️</div><span>Seguridad</span>
+          </button>
+          <button class="menu-item mi-diag" onclick="wrongClick(this)">
+            <div class="menu-icon">📈</div><span>Diagnóstico</span>
+          </button>
+          <button class="menu-item mi-extras" onclick="wrongClick(this)">
+            <div class="menu-icon">🧩</div><span>Extras</span>
+          </button>
+          <button class="menu-item mi-ayuda" onclick="wrongClick(this)">
+            <div class="menu-icon">📖</div><span>Ayuda</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStep3() {
+  document.getElementById('screen').innerHTML = `
+    <div style="display:flex;flex:1;min-height:280px;">
+      <div class="sidebar">
+        <div style="font-size:20px;color:#94a3b8;">◀</div>
+        <div class="sidebar-label">Almac.</div>
+        <div style="font-size:22px;">🏠</div>
+      </div>
+      <div class="list-area">
+        <button class="list-item li-cargar clickable" onclick="advance()">
+          <div class="list-item-icon">📂</div>
+          <div class="list-item-label">Cargar etiqueta</div>
+        </button>
+        <button class="list-item li-impr" onclick="wrongClick(this)">
+          <div class="list-item-icon">📋</div>
+          <div class="list-item-label">Impr. lista de archivos</div>
+        </button>
+        <button class="list-item li-copiar" onclick="wrongClick(this)">
+          <div class="list-item-icon">📄</div>
+          <div class="list-item-label">Copiar archivos</div>
+        </button>
+        <button class="list-item li-format" onclick="wrongClick(this)">
+          <div class="list-item-icon">🗂️</div>
+          <div class="list-item-label">Formatear almac.</div>
+        </button>
+        <button class="list-item li-almacpred" onclick="wrongClick(this)">
+          <div class="list-item-icon">💾</div>
+          <div class="list-item-label">Almac. predeterminado<br><span style="font-size:11px;color:#a5b4fc;">Memoria USB</span></div>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderStep4a() {
+  document.getElementById('screen').innerHTML = `
+    <div style="display:flex;flex:1;min-height:280px;">
+      <div class="sidebar">
+        <div style="font-size:20px;color:#94a3b8;">◀</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="font-size:22px;">📂</div>
+          <div class="sidebar-label" style="font-size:11px;text-align:center;padding:0 6px;">Cargar etiqueta</div>
+        </div>
+        <div style="font-size:22px;">🏠</div>
+      </div>
+      <div class="load-screen" style="padding:10px 10px 10px 8px;">
+        <div class="load-top">
+          <span class="load-top-label">Memoria MF1S</span>
+          <span class="load-top-arrow">▼</span>
+        </div>
+        <button class="file-item clickable" onclick="selectFile(this)">97X50_ET.lbl</button>
+        <div style="flex:1;"></div>
+        <div class="load-actions">
+          <button class="action-btn btn-cancel" onclick="wrongClick(this)">❌</button>
+          <button class="action-btn btn-confirm" onclick="wrongClick(this)" style="opacity:0.4;cursor:not-allowed;">✅</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function selectFile(el) {
+  el.classList.add('selected');
+  el.classList.remove('clickable');
+  showBadge('¡Correcto! ✓', false);
+  setTimeout(() => { current++; render(); }, 700);
+}
+
+function renderStep4b() {
+  document.getElementById('screen').innerHTML = `
+    <div style="display:flex;flex:1;min-height:280px;">
+      <div class="sidebar">
+        <div style="font-size:20px;color:#94a3b8;">◀</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="font-size:22px;">📂</div>
+          <div class="sidebar-label" style="font-size:11px;text-align:center;padding:0 6px;">Cargar etiqueta</div>
+        </div>
+        <div style="font-size:22px;">🏠</div>
+      </div>
+      <div class="load-screen" style="padding:10px 10px 10px 8px;">
+        <div class="load-top">
+          <span class="load-top-label">Memoria MF1S</span>
+          <span class="load-top-arrow">▼</span>
+        </div>
+        <div class="file-item selected">97X50_ET.lbl</div>
+        <div style="flex:1;"></div>
+        <div class="load-actions">
+          <button class="action-btn btn-cancel" onclick="wrongClick(this)">❌</button>
+          <button class="action-btn btn-confirm clickable" onclick="advance()">✅</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSuccess() {
+  renderProgress();
+  document.getElementById('instruction').innerHTML = '🎉 ¡Proceso completado correctamente!';
+  document.getElementById('screen').innerHTML = `
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Etiqueta cargada</div>
+      <div class="success-sub">Completado en 4 pasos · ${errors} error${errors !== 1 ? 'es' : ''}</div>
+      <button class="restart-btn" onclick="restartGame()">↩ Volver a intentarlo</button>
+    </div>
+  `;
+  document.getElementById('step-label').textContent = '';
+}
+
+function restartGame() {
+  current = 0;
+  errors = 0;
+  render();
+}
+
+render();
+</script>
